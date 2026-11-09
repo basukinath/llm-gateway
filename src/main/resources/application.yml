@@ -1,0 +1,44 @@
+server:
+  port: 8080
+
+gateway:
+  claude:
+    api-key: ${CLAUDE_API_KEY:your-claude-api-key-here}
+  openai:
+    api-key: ${OPENAI_API_KEY:your-openai-api-key-here}
+  rate-limit:
+    requests-per-minute: 60
+  cache:
+    enabled: true
+    max-size: 1000
+    ttl-minutes: 30
+  routing:
+    fallback-order:
+      - claude
+      - openai
+
+# Resilience4j Circuit Breaker
+resilience4j:
+  circuitbreaker:
+    instances:
+      llmProvider:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: llm-gateway
+
+spring:
+  application:
+    name: llm-gateway
